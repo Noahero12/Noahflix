@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Noahflix</title>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" as="style">
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://www.youtube.com/iframe_api" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/videasy-player@latest/dist/videasy.min.js" defer></script>
+</head>
+<body>
+  <!-- Floating particles -->
+  <div class="particles"></div>
+  <div class="sparkles"></div>
+
+  <!-- Navbar -->
+  <header class="navbar" id="navbar">
+    <div class="nav-left">
+      <h1 class="logo">Noahflix</h1>
+    </div>
+    <div class="nav-center"></div>
+    </div>
+    <div class="nav-right">
+      <div class="search-container" id="searchContainer">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search movies, TV shows..." />
+        <button id="searchButton" aria-label="Search"></button>
+    </div>
+  </header>
+
+  <!-- Fullscreen Hero Section -->
+  <section class="hero-section" id="hero-section">
+    <div class="hero-reflection"></div>
+    <div class="hero-content">
+      <div class="hero-title-wrapper">
+        <img id="hero-title-img" class="hero-title-img" alt="Title Logo" loading="lazy" />
+        <h1 id="hero-title" class="hero-title-text"></h1>
+      </div>
+      <div class="hero-meta" id="hero-meta"></div>
+      <p class="hero-overview" id="hero-overview">Please wait while we fetch something amazing...</p>
+      <div class="hero-buttons">
+        <button class="btn btn-primary" id="play-btn">Watch Now</button>
+        <button class="btn btn-secondary" id="info-btn">More Info</button>
+      </div>
+      <div class="hero-progress">
+        <div class="hero-timer-bar" id="hero-timer-bar"></div>
+      </div>
+      <div class="hero-nav">
+        <button id="hero-prev">←</button>
+        <button id="hero-next">→</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main id="main-content">
+    <div class="carousel-stack">
+      <section class="carousel-section">
+        <div class="carousel-title-wrapper"><h3 class="carousel-title">Trending Now</h3></div>
+        <div class="carousel" id="trending-carousel"></div>
+      </section>
+      <section class="carousel-section">
+        <div class="carousel-title-wrapper"><h3 class="carousel-title">Top Rated</h3></div>
+        <div class="carousel" id="top-rated-carousel"></div>
+      </section>
+      <section class="carousel-section">
+        <div class="carousel-title-wrapper"><h3 class="carousel-title">Action</h3></div>
+        <div class="carousel" id="action-carousel"></div>
+      </section>
+      <section class="carousel-section">
+        <div class="carousel-title-wrapper"><h3 class="carousel-title">Sci-Fi</h3></div>
+        <div class="carousel" id="scifi-carousel"></div>
+      </section>
+      <section class="carousel-section">
+        <div class="carousel-title-wrapper"><h3 class="carousel-title">Horror</h3></div>
+        <div class="carousel" id="horror-carousel"></div>
+      </section>
+      <section class="carousel-section">
+        <div class="carousel-title-wrapper"><h3 class="carousel-title">TV Shows</h3></div>
+        <div class="carousel" id="tv-carousel"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Search Page -->
+  <section class="search-page" id="search-page" style="display: none;">
+    <div style="padding: 100px 40px 40px;">
+      <div class="carousel-header" style="display: flex; align-items: center;">
+        <div class="carousel-title-wrapper">
+          <h3 id="search-title-text" class="carousel-title">🔍 Search Results</h3>
+        </div>
+        <button onclick="closeSearchPage()" style="margin-left: auto; background: transparent; border: none; color: white; font-size: 20px; cursor: pointer;">✖ Close</button>
+      </div>
+      <div class="search-grid" id="search-carousel"></div>
+    </div>
+  </section>
+
+  <!-- Fullscreen Glass Modal -->
+  <div id="modal" class="glass-modal">
+    <div id="modal-bg-sharp"></div>
+    <div id="modal-trailer-bg"></div>
+    <div class="glass-modal-content">
+      <section class="modal-page modal-page-hero">
+        <div class="modal-hero-overlay">
+          <div id="modal-title-wrap">
+            <img id="modal-title-img" class="title-logo" style="display: none;" loading="lazy" />
+            <div id="modal-title" class="title-text"></div>
+          </div>
+          <div id="modal-meta" class="modal-meta"></div>
+          <p id="modal-overview" class="modal-overview">Overview...</p>
+          <div class="modal-buttons">
+            <button id="modal-main-btn" class="btn btn-primary">▶ Watch Now</button>
+          </div>
+        </div>
+        <div class="scroll-indicator">↓ Scroll for Details</div>
+        <div id="episode-dropdown-container" style="display: none;">
+          <div class="season-selector-inline" style="margin-bottom: 12px;">
+            <select id="season-select" class="minimal-select"></select>
+          </div>
+          <div id="episodeDropdown" class="episode-dropdown hidden"></div>
+        </div>
+      </section>
+      <section class="modal-page modal-page-details">
+        <div class="modal-details-glass redesigned-page2">
+          <div class="section-block">
+            <div class="section-title"><span>🎞️</span> Technical Info</div>
+            <div id="modal-extra-info" class="modal-extra-info-grid animated-info"></div>
+          </div>
+          <div class="section-block">
+            <div class="section-title"><span>👤</span> Top Cast</div>
+            <div id="modal-cast-grid" class="modal-cast-grid redesigned-cast"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section id="episodeHeroModal" class="episode-hero-style hidden">
+      <div class="episode-hero-overlay"></div>
+      <div class="episode-hero-content">
+        <button class="modal-close-x" onclick="closeModalHandler()">×</button>
+        <div id="episodeHeroTitleWrap">
+          <img id="episodeHeroTitleImg" class="hero-title-img" alt="Title Logo" style="display: none;" loading="lazy" />
+          <h2 id="episodeHeroTitle" class="hero-title">Episode Title</h2>
+        </div>
+        <div class="hero-meta" id="episodeHeroMeta"></div>
+        <p id="episodeHeroOverview" class="hero-overview">Overview goes here...</p>
+        <div id="hero-episode-dropdown-container" class="episode-dropdown-box" style="display: none; margin-top: 20px;">
+          <div class="season-selector-inline" style="margin-bottom: 12px;">
+            <select id="hero-season-select" class="minimal-select"></select>
+            <button id="heroDropdownBtn" class="minimal-select" style="margin-left: 12px;">📺 Choose Episode</button>
+            <div id="heroEpisodeDropdown" class="episode-dropdown hidden"></div>
+          </div>
+        </div>
+        <div class="hero-buttons">
+          <button id="episodeWatchBtn" class="btn btn-primary">▶ Watch Now</button>
+        </div>
+      </div>
+    </section>
+    <button class="modal-close-x" onclick="closeModalHandler()">×</button>
+  </div>
+
+  <!-- Trailer Popup -->
+  <div id="trailer-popup" class="trailer-popup" style="display: none;">
+    <div class="trailer-popup-backdrop" onclick="closeTrailerPopup()"></div>
+    <div class="trailer-popup-content">
+      <button onclick="closeTrailerPopup()" class="close-popup">×</button>
+      <iframe id="trailer-iframe" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <!-- Viewing Page -->
+  <section id="viewing-page" class="viewing-page hidden">
+    <div class="viewing-header">
+      <button class="back-button" onclick="closeViewingPage()">⬅ Back</button>
+      <div class="viewing-title-wrapper">
+        <img id="viewing-title-img" class="title-logo" style="display: none;" loading="lazy" />
+        <h2 id="viewing-title">Now Playing</h2>
+      </div>
+    </div>
+    <div id="videasy-wrapper" class="videasy-wrapper">
+      <div id="videasy-player"></div>
+    </div>
+  </section>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
