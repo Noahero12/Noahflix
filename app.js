@@ -26,18 +26,90 @@ const carousels = {
   'tv-carousel': { url: `${TMDB_BASE}/tv/popular?api_key=${TMDB_API_KEY}`, type: 'tv' }
 }
 
+// === Hero Navigation & Swipe Handling ===
+window.addEventListener('DOMContentLoaded', () => {
+  const heroSection = document.getElementById('hero');
+  if (!heroSection) return;
 
-async function loadTitleLogo(tmdbId, type = 'movie') {
-  try {
-    const res = await fetch(`${TMDB_BASE}/${type}/${tmdbId}/images?api_key=${TMDB_API_KEY}`);
-    const data = await res.json();
-    const logo = data.logos?.find(l => l.iso_639_1 === 'en') || data.logos?.[0];
-    return logo ? `https://image.tmdb.org/t/p/original${logo.file_path}` : null;
-  } catch (e) {
-    console.warn('Failed to load logo:', e);
-    return null;
+  let startX = 0, endX = 0;
+  let swipeLocked = false;
+
+  // Touch swipe start
+  heroSection.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+  });
+
+  // Touch swipe end
+  heroSection.addEventListener('touchend', (e) => {
+    endX = e.changedTouches[0].clientX;
+    handleHeroSwipe();
+  });
+
+  // Mouse or trackpad swipe (horizontal scroll)
+  heroSection.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      e.preventDefault();
+      if (e.deltaX > 20) nextHero();
+      else if (e.deltaX < -20) prevHero();
+    }
+  }, { passive: false });
+
+  // Keyboard arrow keys
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') prevHero();
+    if (e.key === 'ArrowRight') nextHero();
+  });
+
+  // Swipe logic
+  function handleHeroSwipe() {
+    const diff = endX - startX;
+    if (diff > 50) prevHero();      // Swipe right → go back
+    else if (diff < -50) nextHero(); // Swipe left → go forward
+  }
+
+  // Show next hero item
+  function nextHero() {
+    if (swipeLocked) return;
+    swipeLocked = true;
+    showHero(currentHeroIndex + 1);
+    setTimeout(() => swipeLocked = false, 600); // Lock to prevent double swipes
+  }
+
+  // Show previous hero item
+  function prevHero() {
+    if (swipeLocked) return;
+    swipeLocked = true;
+    showHero(currentHeroIndex - 1);
+    setTimeout(() => swipeLocked = false, 600);
+  }
+});
+
+
+
+
+async function loadTitleLogo(id) {
+  if (logoCache[id]) return logoCache[id]; // Use cached result
+
+  const url = `${TMDB_BASE}/movie/${id}/images?api_key=${TMDB_API_KEY}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  const logo = data.logos.find(l => l.iso_639_1 === 'en');
+  const logoUrl = logo ? `https://image.tmdb.org/t/p/original${logo.file_path}` : null;
+
+  logoCache[id] = logoUrl; // Cache it
+  return logoUrl;
+}
+
+function preloadHeroAssets() {
+  for (let i = 1; i < heroItems.length; i++) {
+    const item = heroItems[i];
+    loadTitleLogo(item.id);
+    const img = new Image();
+    img.src = ORIGINAL_IMG + item.backdrop_path;
+    backdropCache[item.id] = img.src;
   }
 }
+
 
 window.addEventListener("message", function (event) {
   let data;
@@ -85,29 +157,18 @@ window.addEventListener('scroll', () => {
 async function loadHero() {
   const res = await fetch(`${TMDB_BASE}/trending/movie/week?api_key=${TMDB_API_KEY}`);
   const data = await res.json();
-  heroItems = data.results.slice(0, 5);
+  heroItems = data.results.slice(0, 20);
   showHero(0);
 }
 
 async function showHero(index) {
   currentHeroIndex = (index + heroItems.length) % heroItems.length;
   await setHero(heroItems[currentHeroIndex]);
-  startHeroTimer();
 }
+
 
 function showNextHero() { showHero(currentHeroIndex + 1); }
 function showPrevHero() { showHero(currentHeroIndex - 1); }
-
-function startHeroTimer() {
-  const bar = document.getElementById('hero-timer-bar');
-  if (bar) {
-    bar.style.animation = 'none';
-    void bar.offsetWidth;
-    bar.style.animation = 'heroTimer 10s linear';
-  }
-  clearTimeout(heroTimer);
-  heroTimer = setTimeout(showNextHero, 10000);
-}
 
 async function setHero(item) {
   const title = item.title || item.name;
@@ -142,14 +203,14 @@ if (logoUrl) {
   `;
 
   const heroSection = document.getElementById('hero-section');
-  if (heroSection) {
+  if (heroSection && heroSection.style.backgroundImage !== `url("${bgURL}")`) {
     const preload = new Image();
     preload.src = bgURL;
     preload.onload = () => {
       heroSection.style.backgroundImage = `url('${bgURL}')`;
     };
   }
-
+  
   const playBtn = document.getElementById('play-btn');
   playBtn.onclick = async () => {
     if (type === 'movie') {
@@ -174,6 +235,7 @@ if (logoUrl) {
     };
   }
 }
+
 
 // Hero navigation
 const heroNext = document.getElementById('hero-next');
@@ -899,19 +961,131 @@ const searchContainer = document.getElementById('searchContainer');
       searchInput.value = '';
     }
   });
+  
 
-// === Initialization ===
-async function init() {
-  try {
-    await loadHero();
-    for (const [id, config] of Object.entries(carousels)) {
-      await loadCarousel(id, config);
+  async function init() {
+    try {
+      await loadHero(); // ← Just load hero first
+      preloadHeroAssets(); // ← Optional but nice
+      lazyLoadCarousels(); // ← replace bulk load
+  
+      // Slight delay before loading carousels
+      setTimeout(() => {
+        Object.entries(carousels).forEach(([id, config], i) => {
+          setTimeout(() => loadCarousel(id, config), i * 200); // Stagger with delay
+        });
+      }, 500); // Delay first carousel load by 500ms
+  
+      setupTrendingHover();
+      console.log('🎬 Noahflix Ultra loaded successfully');
+    } catch (err) {
+      console.error('Error initializing app:', err);
     }
-    console.log('🎬 Noahflix Ultra loaded successfully');
-  } catch (err) {
-    console.error('Error initializing app:', err);
   }
+  
+
+  function setupCarouselFadeIn() {
+    const carousels = document.querySelectorAll('.carousel');
+  
+    const observer = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target); // Only trigger once
+        }
+      });
+    }, {
+      threshold: 0.2 // Trigger when 20% is visible
+    });
+  
+    carousels.forEach(carousel => observer.observe(carousel));
+  }
+  
+  // Make sure this runs after carousels are loaded
+  setupCarouselFadeIn();
+  
+  
+
+// Variable to track if hovering over a card
+let hoveredHeroIndex = null;
+
+function setupTrendingHover() {
+  const trendingCarousel = document.getElementById('trending-carousel');
+  if (!trendingCarousel) return;
+
+  trendingCarousel.addEventListener('mouseover', async (e) => {
+    const card = e.target.closest('.movie-card');
+    if (!card) return;
+
+    // Find the index of the hovered card in the carousel's cards list
+    const cards = Array.from(trendingCarousel.querySelectorAll('.movie-card'));
+    hoveredHeroIndex = cards.indexOf(card);
+    if (hoveredHeroIndex < 0) return;
+
+    // Show the hovered movie in the hero (without changing currentHeroIndex)
+    await showHero(hoveredHeroIndex);
+  });
+
+  trendingCarousel.addEventListener('mouseout', async (e) => {
+    // Only reset if we had hovered a card before
+    if (hoveredHeroIndex !== null) {
+      hoveredHeroIndex = null;
+      // Restore hero to currently selected movie
+      await showHero(currentHeroIndex);
+    }
+  });
 }
+
+function lazyLoadCarousels() {
+  const sections = document.querySelectorAll('.carousel');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        const config = carousels[id];
+        if (config) loadCarousel(id, config);
+        observer.unobserve(entry.target); // only load once
+      }
+    });
+  });
+
+  sections.forEach(section => observer.observe(section));
+}
+
+const logoCache = {};
+const backdropCache = {};
+
+// In your main JS, when site is ready (e.g., after initial data and images loaded):
+window.addEventListener('load', () => {
+  const splash = document.getElementById('splash');
+  splash.style.opacity = '0';
+  setTimeout(() => {
+    splash.style.display = 'none';
+  }, 800);
+});
+
+  const minSplashTime = 5000; // 3 seconds
+  const splashStart = Date.now();
+
+  window.addEventListener('load', () => {
+    const elapsed = Date.now() - splashStart;
+    const splash = document.getElementById('splash');
+    
+    const fadeOut = () => {
+      splash.style.opacity = '0';
+      setTimeout(() => {
+        splash.style.display = 'none';
+      }, 800);
+    };
+
+    if (elapsed < minSplashTime) {
+      setTimeout(fadeOut, minSplashTime - elapsed);
+    } else {
+      fadeOut();
+    }
+  });
+
 
 // Start the app
 init();
