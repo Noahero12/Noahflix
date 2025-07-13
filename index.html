@@ -11,9 +11,12 @@
   <script src="https://cdn.jsdelivr.net/npm/videasy-player@latest/dist/videasy.min.js" defer></script>
 </head>
 <body>
-  <!-- Floating particles -->
-  <div class="particles"></div>
-  <div class="sparkles"></div>
+
+  <!-- Add this at the very top of your body -->
+<div id="splash">
+  <div class="big-n">N</div>
+</div>
+
 
   <!-- Navbar -->
   <header class="navbar" id="navbar">
@@ -46,9 +49,11 @@
       <div class="hero-progress">
         <div class="hero-timer-bar" id="hero-timer-bar"></div>
       </div>
+      <div id="hero"></div>
+<div id="hero-next"></div>
+<div id="hero-prev"></div>
+<div id="hero-timer-bar"></div>
       <div class="hero-nav">
-        <button id="hero-prev">←</button>
-        <button id="hero-next">→</button>
       </div>
     </div>
   </section>
@@ -56,6 +61,7 @@
   <!-- Main Content -->
   <main id="main-content">
     <div class="carousel-stack">
+      <section class="carousel-wrapper"></section>
       <section class="carousel-section">
         <div class="carousel-title-wrapper"><h3 class="carousel-title">Trending Now</h3></div>
         <div class="carousel" id="trending-carousel"></div>
