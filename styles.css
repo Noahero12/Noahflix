@@ -1,5 +1,6 @@
 /* Reset & Base */
 * {
+  position: relative;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -13,7 +14,7 @@
 --glass-bg: rgba(255, 255, 255, 0.05);
 --glass-border: rgba(255, 255, 255, 0.12);
 --glass-blur: blur(20px);
---glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+--glass-shadow: 0 2px 32px rgba(0, 0, 0, 1);
 --glass-gradient: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04));
 --glass-hover: rgba(255, 255, 255, 0.08);
 }
@@ -213,7 +214,7 @@ overflow: hidden;
 background: var(--glass-bg);
 border: none;
 z-index: 1;
-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 80%, rgba(0, 0, 0, 0) 100%);
+mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0) 100%);
 mask-mode: match-source;
 mask-repeat: no-repeat;
 mask-size: 100% 100%;
@@ -268,7 +269,7 @@ z-index: 1;
   drop-shadow(0 4px 6px rgba(0, 0, 0, 0.85))
   drop-shadow(0 8px 12px rgba(0, 0, 0, 0.7))
   drop-shadow(0 12px 18px rgba(0, 0, 0, 0.6));
-  margin-right: 633px;
+  margin-right: auto;
   vertical-align: middle;
   position: relative;
   bottom: 40px;
@@ -285,7 +286,8 @@ z-index: 1;
 .hero-content {
   position: relative;
   z-index: 2;
-  padding-bottom: 160px; /* add more breathing room at bottom */
+  padding-bottom: 280px; /* add more breathing room at bottom */
+  margin-left: -45px;
   width: 100%;
   max-width: 900px;
 }
@@ -306,12 +308,18 @@ margin-bottom: 24px;
 font-size: 14px;
 }
 
-.hero-overview {
-font-size: 18px;
-color: rgba(255, 255, 255, 0.95);
-line-height: 1.6;
-margin-bottom: 30px;
-text-shadow: 0 6px 10px rgb(0, 0, 0);
+#hero-overview {
+  max-width: 600px;       /* limit the width */
+  max-height: 4.5em;      /* roughly 3 lines of text (1.5em per line) */
+  overflow: hidden;       /* hide overflow */
+  text-overflow: ellipsis; /* add "..." if clipped */
+  display: -webkit-box;   
+  -webkit-line-clamp: 3;  /* limit to 3 lines (webkit only) */
+  -webkit-box-orient: vertical;
+  line-height: 1.5em;
+  margin-bottom: 30px;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
 }
 
 .hero-buttons {
@@ -391,6 +399,12 @@ from { width: 0%; }
 to { width: 100%; }
 }
 
+#trending-carousel .movie-card:hover {
+  cursor: pointer;
+  filter: brightness(1.1);
+  transition: filter 0.3s ease;
+}
+
 
 .btn {
   background: var(--glass-bg);
@@ -439,8 +453,15 @@ color: white;
   padding-bottom: 2rem;
 }
 
+.carousel-wrapper {
+  position: relative;
+  z-index: 2;
+  margin-top: -270px; /* pull upwards into the hero */
+}
+
 .carousel-section {
 padding-left: 25px;
+margin-top: -22px;
 }
 
 .carousel-header {
@@ -451,11 +472,11 @@ padding:10px;
 }
 
 .carousel-title {
-font-size: 18px;
+font-size: 16px;
 font-weight: 600;
 letter-spacing: 0.5px;
 text-transform: uppercase;
-color: rgba(255, 255, 255, 0.8);
+color: rgb(255, 255, 255);
 margin-bottom: -40px;
 margin-left: 10px;
 }
@@ -510,24 +531,23 @@ transform: translateY(0);
   -ms-overflow-style: none;
 }
 
+.carousel {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  will-change: opacity, transform;
+}
+
+.carousel.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .carousel::-webkit-scrollbar {
   display: none;
 }
 
 /* Movie Cards */
-.movie-card {
-  flex: 0 0 auto;
-  width: 260px;
-  scroll-snap-align: start;
-  position: relative;
-  overflow: hidden;
-  border-radius: 1.2rem;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  cursor: pointer;
-}
 
   .movie-logo {
     position: absolute;
@@ -597,13 +617,12 @@ filter: brightness(1.1) saturate(1.1);
 .movie-card {
 position: relative;
 flex: 0 0 auto;
-width: 320px;
+width: 300px;
 height: 180px;
-border-radius: 20px;
+border-radius: 25px;
 overflow: hidden;
 background: var(--glass-gradient);
 backdrop-filter: var(--glass-blur);
-border: 1px solid var(--glass-border);
 box-shadow: var(--glass-shadow);
 transition: all 0.3s ease;
 cursor: pointer;
@@ -1387,7 +1406,8 @@ opacity: 1;
 background-size: cover;
 background-position: center;
 background-repeat: no-repeat;
-transition: background-image 0.8s ease-in-out;
+transition: background-image 0.8s ease-in-out; 
+z-index: 0;
 }
 
 /* =============== STUNNING PAGE 2 STYLES =============== */
@@ -1715,3 +1735,61 @@ color: white;
 white-space: nowrap;
 opacity: 0.9;
 }
+
+
+/* Splash styles */
+#splash {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #000000; /* example Noahflix blue */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.8s ease;
+}
+
+.big-n {
+  font-size: 25vw;
+  font-weight: 900;
+  font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(270deg, #e50914, #8b5cf6, #e50914, #8b5cf6);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow:
+    2px 2px 8px rgba(0, 0, 0, 0.25),  /* soft drop shadow for depth */
+    0 0 18px rgba(139, 92, 246, 0.85); /* bright purple glow */
+  animation: gradientShift 8s ease infinite, shimmer 3s ease-in-out infinite;
+  display: inline-block;
+  transform: skew(-6deg) rotate(-2deg);
+  letter-spacing: -0.05em;
+  position: relative;
+  cursor: default;
+  user-select: none;
+}
+
+/* Gradient moving horizontally */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Subtle shimmer overlay */
+@keyframes shimmer {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.15);
+  }
+}
+
